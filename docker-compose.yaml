@@ -1,0 +1,12 @@
+services:
+  activemq-windows:
+    build:
+      context: .
+      dockerfile: dockerfile
+    container_name: activemq_win
+    ports:
+      - "61616:61616"
+      - "8161:8161"
+    volumes:
+      - ./activemq_data:C:/ActiveMQ/data
+
