@@ -1,0 +1,50 @@
+# Multi-stage build for Windows Nano Server
+# Stage 1: Extract and prepare on Server Core (has tar and PowerShell)
+FROM mcr.microsoft.com/windows/servercore:ltsc2022 AS builder
+
+# Copy and extract JRE
+COPY setup/jdk-25_windows-x64_bin.zip C:/TEMP/jre.zip
+RUN mkdir C:\Java && \
+    tar -xf C:\TEMP\jre.zip -C C:\TEMP && \
+    for /d %i in (C:\TEMP\jdk*) do move "%i" C:\Java\jre
+
+# Copy and extract ActiveMQ
+COPY setup/apache-activemq-5.19.1-bin.zip C:/TEMP/activemq.zip
+RUN mkdir C:\ActiveMQ && \
+    tar -xf C:\TEMP\activemq.zip -C C:\ActiveMQ
+
+# Configure ActiveMQ to listen on all interfaces
+RUN powershell -Command "(Get-Content 'C:\ActiveMQ\apache-activemq-5.19.1\conf\jetty.xml') -replace '127.0.0.1', '0.0.0.0' | Set-Content 'C:\ActiveMQ\apache-activemq-5.19.1\conf\jetty.xml'"
+
+
+# Stage 2: Final Nano Server image
+FROM mcr.microsoft.com/windows/nanoserver:ltsc2025
+
+# Copy Java from builder
+COPY --from=builder C:/Java/jre C:/Java/jre
+
+# Copy ActiveMQ from builder
+COPY --from=builder C:/ActiveMQ/apache-activemq-5.19.1 C:/ActiveMQ/apache-activemq-5.19.1
+
+# Set environment variables
+ENV JAVA_HOME=C:\\Java\\jre
+ENV PATH=C:\\Java\\jre\\bin;C:\\Windows\\system32;C:\\Windows
+
+# Expose ActiveMQ ports
+EXPOSE 61616 5672 8161 61613 61614 1883
+
+# Set working directory
+WORKDIR "C:\\ActiveMQ\\apache-activemq-5.19.1"
+
+# Start ActiveMQ directly with Java (bat files don't work well in Nano Server)
+CMD ["C:\\Java\\jre\\bin\\java.exe", \
+     "-Xms1G", "-Xmx1G", \
+     "-Djava.util.logging.config.file=logging.properties", \
+     "-Djava.security.auth.login.config=conf\\login.config", \
+     "-Dcom.sun.management.jmxremote", \
+     "-Dactivemq.classpath=conf", \
+     "-Dactivemq.home=C:\\ActiveMQ\\apache-activemq-5.19.1", \
+     "-Dactivemq.base=C:\\ActiveMQ\\apache-activemq-5.19.1", \
+     "-Dactivemq.conf=C:\\ActiveMQ\\apache-activemq-5.19.1\\conf", \
+     "-Dactivemq.data=C:\\ActiveMQ\\apache-activemq-5.19.1\\data", \
+     "-jar", "bin\\activemq.jar", "start"]

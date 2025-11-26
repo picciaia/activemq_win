@@ -2,7 +2,7 @@ services:
   activemq-windows:
     build:
       context: .
-      dockerfile: dockerfile
+      dockerfile: dockerfile-nano
     container_name: activemq_win
     ports:
       - "61616:61616"

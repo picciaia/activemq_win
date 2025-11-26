@@ -6,15 +6,10 @@ FROM mcr.microsoft.com/windows/servercore:ltsc2022
 COPY setup/jdk-25_windows-x64_bin.zip C:/TEMP/jre.zip
 
 # extract JRE
-RUN powershell -Command " \
-    Write-Host 'Extracting JRE...'; \
-    Expand-Archive -Path 'C:\TEMP\jre.zip' -DestinationPath 'C:\TEMP\jre_extracted'; \
-    Write-Host 'Creating Java directory...'; \
-    New-Item -Path 'C:\Java' -ItemType Directory -Force; \
-    Write-Host 'Moving JRE to final location...'; \
-    $jreFolder = Get-ChildItem 'C:\TEMP\jre_extracted' -Directory | Select-Object -First 1; \
-    Move-Item $jreFolder.FullName 'C:\Java\jre'; \
-    Remove-Item 'C:\TEMP' -Recurse -Force"
+RUN mkdir C:\Java && \
+    tar -xf C:\TEMP\jre.zip -C C:\TEMP && \
+    for /d %i in (C:\TEMP\jdk*) do move "%i" C:\Java\jre && \
+    rmdir /S /Q C:\TEMP
 
 # verify Java installation
 RUN dir C:\Java\jre\bin\java.exe
