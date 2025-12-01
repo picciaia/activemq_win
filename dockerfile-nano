@@ -36,19 +36,6 @@ EXPOSE 61616 5672 8161 61613 61614 1883
 # Set working directory
 WORKDIR "C:\\ActiveMQ\\apache-activemq-5.19.1"
 
-## Start ActiveMQ directly with Java (bat files don't work well in Nano Server)
-#CMD ["C:\\Java\\jre\\bin\\java.exe", \
-#     "-Xms1G", "-Xmx1G", \
-#     "-Djava.util.logging.config.file=logging.properties", \
-#     "-Djava.security.auth.login.config=conf\\login.config", \
-#     "-Dcom.sun.management.jmxremote", \
-#     "-Dactivemq.classpath=conf", \
-#     "-Dactivemq.home=C:\\ActiveMQ\\apache-activemq-5.19.1", \
-#     "-Dactivemq.base=C:\\ActiveMQ\\apache-activemq-5.19.1", \
-#     "-Dactivemq.conf=C:\\ActiveMQ\\apache-activemq-5.19.1\\conf", \
-#     "-Dactivemq.data=C:\\ActiveMQ\\apache-activemq-5.19.1\\data", \
-#     "-jar", "bin\\activemq.jar", "start"]
-
 
 
 # start ActiveMQ in foreground
